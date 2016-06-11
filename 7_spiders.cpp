@@ -16,10 +16,11 @@ class Matrix {
     
     Matrix multiply(const Matrix &other) {
         Matrix newMat;
-        newMat.m[0][0] = (m[0][0]*other.m[0][0] + m[0][1]*other.m[1][0]);
-        newMat.m[0][1] = (m[0][0]*other.m[0][1] + m[0][1]*other.m[1][1]);
-        newMat.m[1][0] = (m[1][0]*other.m[0][0] + m[1][1]*other.m[1][0]);
-        newMat.m[1][1] = (m[1][0]*other.m[0][1] + m[1][1]*other.m[1][1]);
+        newMat.m[0][0] = std::min((m[0][0]*other.m[0][0] + m[0][1]*other.m[1][0]), (unsigned long long) 1001);
+        newMat.m[0][1] = std::min((m[0][0]*other.m[0][1] + m[0][1]*other.m[1][1]), (unsigned long long) 1001);
+        newMat.m[1][0] = std::min((m[1][0]*other.m[0][0] + m[1][1]*other.m[1][0]), (unsigned long long) 1001);
+        //set the max to 1001
+        newMat.m[1][1] = std::min((m[1][0]*other.m[0][1] + m[1][1]*other.m[1][1]), (unsigned long long) 1001);
         return newMat;
     }
     
@@ -27,8 +28,12 @@ class Matrix {
 };
 
 Matrix base;
+Matrix start;
 Matrix fib(unsigned long long N) {
 
+    if (N == 0) {
+        return start;
+    }
     if (N == 1) {
         return base;
     }
@@ -36,7 +41,7 @@ Matrix fib(unsigned long long N) {
     Matrix part = fib(N/2);
     Matrix ret = part.multiply(part);
     if (N % 2 == 1) {
-        return ret.multiply(Matrix());            
+        return ret.multiply(base);            
     }
     return ret;
     
@@ -45,17 +50,15 @@ Matrix fib(unsigned long long N) {
 
 std::vector<int> dist;
 
-int binary_search(int lo, int hi, int x, bool pat = false) {
+int binary_search(int lo, int hi, int x, bool usefib = false) {
     //std::cout << lo << " " << hi << std::endl;
     while (hi - lo > 1) {
         int mid = (lo + hi) / 2;
         bool condition;
-        if (!pat) {
+        if (!usefib) {
             condition = dist[mid] > x;
         } else {
-
-//            std::cout << mid << " " << fib(mid).m[0][0] << " " << x << std::endl;
-            condition = fib(mid).m[0][0] > x;
+            condition = fib(mid).multiply(start).m[1][1] > x;            
         }
         if (condition) {
             hi = mid;
@@ -67,7 +70,7 @@ int binary_search(int lo, int hi, int x, bool pat = false) {
 }
 
 int main() {
-//    std::cout << fib(5).m[0][0] << std::endl;
+
     std::string line;
     while (std::getline(std::cin, line)) {
   
@@ -80,43 +83,50 @@ int main() {
         while (is >> x) {
             dist.push_back(x);
         }
+        //we always have dist[0], so we can check if its going to fall
         if (J < dist[0]) {
             std::cout << "The spider is going to fall!" << std::endl;
             continue;
         }
+        //no pattern            
         if (dist.size() == Dist + 1) {
-
-            //no pattern            
+            //Can jump when its at the water fall
             if (dist[Dist] <= J) {
                 std::cout << "The spider may fall!" << std::endl;
-                continue;
+            } else {
+                //search for correct place
+                int idx = binary_search(0, Dist + 1, J);
+                std::cout << (Dist) - idx << std::endl;
             }
-            int idx = binary_search(0, Dist + 1, J);
-            std::cout << (Dist) - idx << std::endl;
-            continue;
+            
             
         } else {
             //pattern
             //magic formula :). Solves the linear eqns
             A = dist[0], B = dist[1], C = dist[2], D = dist[1], E = dist[2], F = dist[3];
-            x = (C*E - B*F) / (A*E - B*D);
-            y = (A*F - C*D) / (A*E - B*D);
+            //if a*e - b*d = 0
+            if (A * E != B * D) {
+                x = (C*E - B*F) / (A*E - B*D);
+                y = (A*F - C*D) / (A*E - B*D);
+            } else {
+                x = 1;
+                y = 1;
+            }                            
+            
+            base.m[0][0] = y; base.m[0][1] = x; base.m[1][0] = 1; base.m[1][1] = 0;
 
-            base.m[0][0] = y; base.m[0][1] = 1; base.m[1][0] = x; base.m[1][1] = 0;
-            Matrix start;
             start.m[0][0] = C; start.m[0][1] = B; start.m[1][0] = B; start.m[1][1] = A;
 
             int idx = binary_search(0, Dist + 1, J, true);
-
-            
-            
-            
-            continue;                       
-            
+                                                        
+            if (idx >= Dist) {
+                std::cout << "The spider may fall!" << std::endl;
+            } else {
+                std::cout << (Dist) - idx << std::endl;
+            }
 
         }
-        line = "";
-        std::cout << std::endl;
+ 
     }
 
 }
