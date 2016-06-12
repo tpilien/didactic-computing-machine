@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 
+int Dist, J;
 int x, y;
 int A, B, C, D, E, F;
 class Matrix {
@@ -16,10 +17,11 @@ class Matrix {
     
     Matrix multiply(const Matrix &other) {
         Matrix newMat;
+        //set the max to 1001 (since jump distance is max 1000)
+        //prevent overflows
         newMat.m[0][0] = std::min((m[0][0]*other.m[0][0] + m[0][1]*other.m[1][0]), (unsigned long long) 1001);
         newMat.m[0][1] = std::min((m[0][0]*other.m[0][1] + m[0][1]*other.m[1][1]), (unsigned long long) 1001);
-        newMat.m[1][0] = std::min((m[1][0]*other.m[0][0] + m[1][1]*other.m[1][0]), (unsigned long long) 1001);
-        //set the max to 1001
+        newMat.m[1][0] = std::min((m[1][0]*other.m[0][0] + m[1][1]*other.m[1][0]), (unsigned long long) 1001);        
         newMat.m[1][1] = std::min((m[1][0]*other.m[0][1] + m[1][1]*other.m[1][1]), (unsigned long long) 1001);
         return newMat;
     }
@@ -27,21 +29,23 @@ class Matrix {
     unsigned long long m[2][2];
 };
 
+Matrix exp;
 Matrix base;
-Matrix start;
-Matrix fib(unsigned long long N) {
 
+//fast exponentiation for fibonacci
+Matrix fib(unsigned long long N) {
+    
     if (N == 0) {
-        return start;
+        return base;        
     }
     if (N == 1) {
-        return base;
+        return exp;
     }
     
     Matrix part = fib(N/2);
     Matrix ret = part.multiply(part);
     if (N % 2 == 1) {
-        return ret.multiply(base);            
+        return ret.multiply(exp);            
     }
     return ret;
     
@@ -50,15 +54,16 @@ Matrix fib(unsigned long long N) {
 
 std::vector<int> dist;
 
-int binary_search(int lo, int hi, int x, bool usefib = false) {
-    //std::cout << lo << " " << hi << std::endl;
+int binary_search(int lo, int hi, int x) {
     while (hi - lo > 1) {
         int mid = (lo + hi) / 2;
         bool condition;
-        if (!usefib) {
+        //if we have a value for the distance at position mid
+        if (mid < dist.size()) {
             condition = dist[mid] > x;
         } else {
-            condition = fib(mid).multiply(start).m[1][1] > x;            
+            //else calculate a value
+            condition = fib(mid).multiply(base).m[1][1] > x;            
         }
         if (condition) {
             hi = mid;
@@ -75,11 +80,12 @@ int main() {
     while (std::getline(std::cin, line)) {
   
         std::stringstream is(line);
-        int Dist, J;
+
         is >> Dist >> J;
 
         dist.clear();
         int x;
+        //read in distances
         while (is >> x) {
             dist.push_back(x);
         }
@@ -102,22 +108,26 @@ int main() {
             
         } else {
             //pattern
-            //magic formula :). Solves the linear eqns
-            A = dist[0], B = dist[1], C = dist[2], D = dist[1], E = dist[2], F = dist[3];
+                        
+            A = dist[0], B = dist[1], C = dist[2], D = dist[3];
             //if a*e - b*d = 0
-            if (A * E != B * D) {
-                x = (C*E - B*F) / (A*E - B*D);
-                y = (A*F - C*D) / (A*E - B*D);
+            if (A * C != B * B) {
+                //magic formula :). Solves the 2 linear eqns. 
+                //Ax + By = C, Bx + Cy = D
+                x = (C*C - B*D) / (A*C - B*B);
+                y = (A*D - C*B) / (A*C - B*B);
             } else {
+                //otherwise we set x and y to 1
                 x = 1;
                 y = 1;
             }                            
-            
-            base.m[0][0] = y; base.m[0][1] = x; base.m[1][0] = 1; base.m[1][1] = 0;
+            //the matrix used for fast exponentiation
+            exp.m[0][0] = y; exp.m[0][1] = x; exp.m[1][0] = 1; exp.m[1][1] = 0;
+ 
+            //the base case
+            base.m[0][0] = C; base.m[0][1] = B; base.m[1][0] = B; base.m[1][1] = A;
 
-            start.m[0][0] = C; start.m[0][1] = B; start.m[1][0] = B; start.m[1][1] = A;
-
-            int idx = binary_search(0, Dist + 1, J, true);
+            int idx = binary_search(0, Dist + 1, J);
                                                         
             if (idx >= Dist) {
                 std::cout << "The spider may fall!" << std::endl;
