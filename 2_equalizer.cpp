@@ -45,28 +45,45 @@ int main() {
       }
     }
     
-    // now place 0s in the old string and find the amount of misplaced tiles
-    unsigned int misplaced = 0;
+    // now place 0s in the old string
     for (unsigned int i = 0; i < ss.size(); ++i) {
       if (ss[i] == '?' && tt[i] == '0' && edit_zeros < zeros) {
         edits++;
         edit_zeros++;
         ss[i] = '0';
-      } else if (ss[i] == '?' && tt[i] == '0' && edit_zeros == zeros) {
+      } else if (ss[i] == '?' && tt[i] == '0' && edit_zeros >= zeros) {
         edits++;
         edit_ones++;
         ss[i] = '1';
       }
-      
-      if (ss[i] != tt[i]) {
-        misplaced++;
+    }
+    
+    // find the amount of misplaced tiles
+    unsigned int misplaced_zero = 0;
+    unsigned int misplaced_one = 0;
+    for (unsigned int i = 0; i < ss.size(); ++i) {
+      if (ss[i] == '0' && tt[i] == '1' && edit_ones < ones && edit_zeros != zeros) {
+        edits++;
+        edit_zeros--;
+        edit_ones++;
+        ss[i] = '1';
+      }
+
+      if (ss[i] != tt[i] && ss[i] == '0') {
+        misplaced_zero++;
+      } else if (ss[i] != tt[i] && ss[i] == '1') {
+        misplaced_one++;
+      } else if (ss[i] == '?') {
+        misplaced_zero = 1;
+        misplaced_one = 2;
+        break;
       }
     }
     
-    if (zeros != edit_zeros && ones != edit_ones) {
+    if (zeros != edit_zeros || ones != edit_ones || misplaced_one != misplaced_zero) {
       cout << "Case " << z << ": -1" << endl;
     } else {
-      cout << "Case " << z << ": " << edits + (misplaced/2) << endl;
+      cout << "Case " << z << ": " << edits + (misplaced_one) << endl;
     }
   }
 
