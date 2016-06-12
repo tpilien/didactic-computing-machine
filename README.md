@@ -9,7 +9,7 @@ Nevin Lazarus - z5019263
 
 Status:  
 1 : Incomplete  
-2 : Complete - Tested 
+2 : Complete - Tested  
 3 : Incomplete  
 4 : Incomplete  
 5 : Incomplete  
