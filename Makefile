@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -Werror -std=c++98 -g
+CFLAGS = -Wall -Werror -std=c++11 -g
 
 TARGET = beehives equalizer lcm \
 	rna old_school robots spiders \
